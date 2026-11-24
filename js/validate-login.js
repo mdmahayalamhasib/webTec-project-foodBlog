@@ -1,4 +1,4 @@
-// public/js/validate-login.js
+// js/validate-login.js
 
 (function () {
     const form = document.getElementById('loginForm');

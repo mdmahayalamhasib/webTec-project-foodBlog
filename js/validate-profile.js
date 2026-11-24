@@ -1,4 +1,4 @@
-// public/js/validate-profile.js
+// js/validate-profile.js
 
 (function () {
     const form = document.getElementById('profileForm');
@@ -24,7 +24,7 @@
     };
 
     const validateEmail = (v) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
-    const ALLOWED_TYPES  = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    const ALLOWED_TYPES  = ['image/jpeg', 'image/png'];
     const MAX_SIZE       = 2 * 1024 * 1024;
 
     // Real-time
@@ -42,7 +42,7 @@
         const file = form.profile_picture.files[0];
         if (!file) { clearError('profile_picture'); return; }
         if (!ALLOWED_TYPES.includes(file.type)) {
-            showError('profile_picture', 'Only JPEG, PNG, GIF or WEBP images allowed.');
+            showError('profile_picture', 'Only JPEG or PNG images allowed.');
         } else if (file.size > MAX_SIZE) {
             showError('profile_picture', 'Image must be under 2 MB.');
         } else {
@@ -51,21 +51,21 @@
     });
 
     form.new_password.addEventListener('input', () => {
-        if (!form.new_password.value) { clearError('new_password'); clearError('confirm_password'); return; }
+        if (!form.new_password.value) { clearError('new_password'); clearError('new_password_confirm'); return; }
         form.new_password.value.length < 8
             ? showError('new_password', 'New password must be at least 8 characters.')
             : clearError('new_password');
-        if (form.confirm_password.value) {
-            form.confirm_password.value !== form.new_password.value
-                ? showError('confirm_password', 'Passwords do not match.')
-                : clearError('confirm_password');
+        if (form.new_password_confirm.value) {
+            form.new_password_confirm.value !== form.new_password.value
+                ? showError('new_password_confirm', 'Passwords do not match.')
+                : clearError('new_password_confirm');
         }
     });
 
-    form.confirm_password.addEventListener('input', () => {
-        form.confirm_password.value !== form.new_password.value
-            ? showError('confirm_password', 'Passwords do not match.')
-            : clearError('confirm_password');
+    form.new_password_confirm.addEventListener('input', () => {
+        form.new_password_confirm.value !== form.new_password.value
+            ? showError('new_password_confirm', 'Passwords do not match.')
+            : clearError('new_password_confirm');
     });
 
     form.addEventListener('submit', (e) => {
@@ -81,13 +81,13 @@
         const file = form.profile_picture.files[0];
         if (file) {
             if (!ALLOWED_TYPES.includes(file.type)) {
-                showError('profile_picture', 'Only JPEG, PNG, GIF or WEBP images allowed.'); valid = false;
+                showError('profile_picture', 'Only JPEG or PNG images allowed.'); valid = false;
             } else if (file.size > MAX_SIZE) {
                 showError('profile_picture', 'Image must be under 2 MB.'); valid = false;
             }
         }
 
-        const hasPasswordChange = form.current_password.value || form.new_password.value || form.confirm_password.value;
+        const hasPasswordChange = form.current_password.value || form.new_password.value || form.new_password_confirm.value;
         if (hasPasswordChange) {
             if (!form.current_password.value) {
                 showError('current_password', 'Current password is required.'); valid = false;
@@ -95,8 +95,8 @@
             if (form.new_password.value.length < 8) {
                 showError('new_password', 'New password must be at least 8 characters.'); valid = false;
             }
-            if (form.confirm_password.value !== form.new_password.value) {
-                showError('confirm_password', 'Passwords do not match.'); valid = false;
+            if (form.new_password_confirm.value !== form.new_password.value) {
+                showError('new_password_confirm', 'Passwords do not match.'); valid = false;
             }
         }
 

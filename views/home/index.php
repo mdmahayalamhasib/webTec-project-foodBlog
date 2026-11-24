@@ -30,7 +30,7 @@
       <div class="card">
         <h3><a href="<?= BASE_URL ?>/restaurants/<?= $r['id'] ?>/show"><?= h($r['name']) ?></a></h3>
         <p class="meta">📍 <?= h($r['location']) ?> &middot; <?= h($r['area']) ?></p>
-        <p><?= h(substr($r['short_background'] ?? '', 0, 120)) ?>...</p>
+        <p><?= h(mb_strimwidth($r['short_background'] ?? '', 0, 120, '...')) ?></p>
         <a href="<?= BASE_URL ?>/restaurants/<?= $r['id'] ?>/show" class="btn-outline">View Menu</a>
       </div>
     <?php endforeach; ?>

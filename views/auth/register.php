@@ -10,23 +10,19 @@
     <?= csrfField() ?>
     <div class="form-group">
       <label>Full Name</label>
-      <input type="text" name="name" class="input" required minlength="2" value="<?= h($_POST['name'] ?? '') ?>">
-      <span class="field-error" id="err-name"></span>
+      <input type="text" id="name" name="name" class="input" required minlength="2" value="<?= h($_POST['name'] ?? '') ?>">
     </div>
     <div class="form-group">
       <label>Email</label>
-      <input type="email" name="email" class="input" required value="<?= h($_POST['email'] ?? '') ?>">
-      <span class="field-error" id="err-email"></span>
+      <input type="email" id="email" name="email" class="input" required value="<?= h($_POST['email'] ?? '') ?>">
     </div>
     <div class="form-group">
       <label>Password (min 8 characters)</label>
       <input type="password" name="password" id="password" class="input" required minlength="8">
-      <span class="field-error" id="err-password"></span>
     </div>
     <div class="form-group">
       <label>Confirm Password</label>
       <input type="password" name="password_confirm" id="password_confirm" class="input" required>
-      <span class="field-error" id="err-password-confirm"></span>
     </div>
     <div class="form-group">
       <label>Role</label>
@@ -39,4 +35,5 @@
   </form>
   <p class="form-footer">Already have an account? <a href="<?= BASE_URL ?>/auth/login">Login</a></p>
 </div>
+<script src="<?= BASE_URL ?>/js/validate-register.js"></script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

@@ -57,7 +57,7 @@ class FoodExperienceController {
     public function edit(int $id): void {
         requireLogin();
         $post = $this->fe->findById($id);
-        if (!$post || ($post['user_id'] !== $_SESSION['user_id'] && !isAdmin())) {
+        if (!$post || ((int)$post['user_id'] !== currentUserId() && !isAdmin())) {
             redirect('/food-experience');
         }
         $restaurants = $this->restaurants->getAll();
@@ -70,7 +70,7 @@ class FoodExperienceController {
         requireLogin();
         if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) redirect('/food-experience');
         $post = $this->fe->findById($id);
-        if (!$post || ($post['user_id'] !== $_SESSION['user_id'] && !isAdmin())) {
+        if (!$post || ((int)$post['user_id'] !== currentUserId() && !isAdmin())) {
             redirect('/food-experience');
         }
         $errors = [];
@@ -78,6 +78,7 @@ class FoodExperienceController {
         if ($errors) {
             $restaurants = $this->restaurants->getAll();
             $menuItems   = $this->items->getAll();
+            $post = array_merge($post, $_POST);
             include __DIR__ . '/../views/food_experience/form.php';
             return;
         }
@@ -90,7 +91,7 @@ class FoodExperienceController {
         requireLogin();
         if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) redirect('/food-experience');
         $post = $this->fe->findById($id);
-        if (!$post || ($post['user_id'] !== $_SESSION['user_id'] && !isAdmin())) {
+        if (!$post || ((int)$post['user_id'] !== currentUserId() && !isAdmin())) {
             redirect('/food-experience');
         }
         $this->fe->delete($id);

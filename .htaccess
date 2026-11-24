@@ -1,8 +1,15 @@
 Options -Indexes
 DirectoryIndex index.php
-RewriteEngine On
-RewriteBase /food_blog/
 
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^ index.php [QSA,L]
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # No RewriteBase on purpose: works from any folder name inside htdocs.
+
+    # Never expose config / source folders over HTTP
+    RewriteRule ^(config|controllers|models|views)(/|$) - [F,L]
+
+    # Real files (css/, js/, uploads/) are served directly; everything else goes to index.php
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>

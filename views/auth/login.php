@@ -10,11 +10,11 @@
     <?= csrfField() ?>
     <div class="form-group">
       <label>Email</label>
-      <input type="email" name="email" class="input" required value="<?= h($_POST['email'] ?? '') ?>">
+      <input type="email" id="email" name="email" class="input" required value="<?= h($_POST['email'] ?? '') ?>">
     </div>
     <div class="form-group">
       <label>Password</label>
-      <input type="password" name="password" class="input" required minlength="8">
+      <input type="password" id="password" name="password" class="input" required>
     </div>
     <div class="form-group checkbox">
       <label><input type="checkbox" name="remember_me"> Remember Me (30 days)</label>
@@ -23,4 +23,5 @@
   </form>
   <p class="form-footer">Don't have an account? <a href="<?= BASE_URL ?>/auth/register">Register</a></p>
 </div>
+<script src="<?= BASE_URL ?>/js/validate-login.js"></script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

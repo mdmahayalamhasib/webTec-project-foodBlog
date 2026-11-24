@@ -16,7 +16,7 @@
     <p>🍜 Food Item: <a href="<?= BASE_URL ?>/menu-items/<?= $post['menu_item_id'] ?>/show"><?= h($post['item_name']) ?></a></p>
   <?php endif; ?>
   <div class="fe-content"><?= nl2br(h($post['content'])) ?></div>
-  <?php if (isLoggedIn() && ($post['user_id'] === $_SESSION['user_id'] || isAdmin())): ?>
+  <?php if (isLoggedIn() && ((int)$post['user_id'] === currentUserId() || isAdmin())): ?>
     <div class="post-actions">
       <a href="<?= BASE_URL ?>/food-experience/<?= $post['id'] ?>/edit" class="btn-secondary">Edit</a>
       <form method="POST" action="<?= BASE_URL ?>/food-experience/<?= $post['id'] ?>/delete" style="display:inline" onsubmit="return confirm('Delete this post?')">
@@ -36,7 +36,7 @@
         <strong><?= h($c['user_name']) ?></strong>
         <span class="review-date"><?= h($c['created_at']) ?></span>
         <p><?= nl2br(h($c['comment'])) ?></p>
-        <?php if (isLoggedIn() && ($c['user_id'] === $_SESSION['user_id'] || isAdmin())): ?>
+        <?php if (isLoggedIn() && ((int)$c['user_id'] === currentUserId() || isAdmin())): ?>
           <button class="btn-danger btn-sm" onclick="deleteComment(<?= $c['id'] ?>)">Delete</button>
         <?php endif; ?>
       </div>
@@ -60,42 +60,4 @@
 
 <br><a href="<?= BASE_URL ?>/food-experience" class="btn-outline">← Back to Food Experience</a>
 
-<script>
-const BASE_URL = '<?= BASE_URL ?>';
-function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-
-async function postComment(postId) {
-  const text   = document.getElementById('comment-text').value.trim();
-  const errBox = document.getElementById('comment-error');
-  errBox.classList.add('hidden');
-  if (!text) { errBox.textContent = 'Comment cannot be empty.'; errBox.classList.remove('hidden'); return; }
-  try {
-    const res  = await fetch(BASE_URL + '/api/food-exp/comments/add', {
-      method: 'POST', headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({post_id: postId, comment: text})
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error');
-    document.getElementById('no-comments')?.remove();
-    document.getElementById('comments-list').insertAdjacentHTML('beforeend',
-      `<div class="comment-card" id="comment-${data.id}">
-         <strong>${escHtml(data.user_name)}</strong>
-         <span class="review-date">${data.created_at}</span>
-         <p>${escHtml(data.comment).replace(/\n/g,'<br>')}</p>
-         <button class="btn-danger btn-sm" onclick="deleteComment(${data.id})">Delete</button>
-       </div>`);
-    document.getElementById('comment-text').value = '';
-  } catch (e) {
-    errBox.textContent = e.message; errBox.classList.remove('hidden');
-  }
-}
-
-async function deleteComment(id) {
-  if (!confirm('Delete this comment?')) return;
-  const res  = await fetch(BASE_URL + '/api/food-exp/comments/' + id, {method: 'DELETE'});
-  const data = await res.json();
-  if (data.success) document.getElementById('comment-' + id)?.remove();
-  else alert(data.error || 'Error');
-}
-</script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

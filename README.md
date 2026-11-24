@@ -1,94 +1,112 @@
 # FoodBlog
 
-## Overview
+An online food blogging and restaurant review platform built with **PHP (MVC) + MySQL**, designed to run out-of-the-box on **XAMPP**.
+Visitors browse restaurants and dishes, members review dishes and share Food Experience blog posts, and admins manage the entire platform.
 
-FoodBlog is an **online food blogging platform** that allows users to explore restaurants, browse menu items, and share food experiences. The platform supports three types of users:
+| Role | Permissions & Capabilities |
+|---|---|
+| **Visitor** | Browse/search restaurants and menu items, read reviews and Food Experience posts |
+| **Member** | All of the above + register/login, edit profile (avatar, password), review menu items, write Food Experience posts, comment |
+| **Admin** | Full restaurant & menu-item CRUD (with image upload), dashboard statistics, remove members / reviews / posts / comments |
 
-* **ADMIN** – Manages the platform, including restaurants, menu items, members, and content moderation.
-* **MEMBER** – Registered users who can browse restaurants, post reviews, and interact on the "Food Experience" page.
-* **VISITOR** – Unregistered users who can view restaurants, menu items, and blog posts but cannot post or comment.
+---
 
-The platform is designed to deliver a **clean, responsive, and interactive user experience** for food enthusiasts.
+## Quick Start (XAMPP Setup)
 
-## Team & Tasks
+This project is **folder-name agnostic**. The base URL is automatically detected from where the project is placed inside XAMPP's `htdocs` directory.
 
-| Student ID | Task   | Main Features                                                       |
-| ---------- | ------ | ------------------------------------------------------------------- |
-| 23-53246-3 | Task 1 | User Authentication, Registration, Profile, Home Page, Basic Browse |
-| 23-55710-3 | Task 2 | Admin: Restaurant & Menu Item Management (Full CRUD)                |
-| 23-53996-3 | Task 3 | Member: Browse, Search & Filtering, Post/Delete Reviews             |
-| 23-50895-1 | Task 4 | Food Experience Page, Admin Removal of Members & Comments           |
+### 1. Place the project in `htdocs`
+Place this folder directly into your XAMPP `htdocs` directory (`C:\xampp\htdocs\`). Any folder name works:
+* `C:\xampp\htdocs\webTec-project-foodBlog\` (from `git clone`)
+* `C:\xampp\htdocs\webTec-project-foodBlog-main\` (from GitHub ZIP download)
+* `C:\xampp\htdocs\foodBlog\`
 
-## Features
+### 2. Start XAMPP Services
+Open the **XAMPP Control Panel** and click **Start** for both **Apache** and **MySQL**.
 
-### User Management
+### 3. Open in Browser
+Visit the corresponding URL in your browser:
+* If in `webTec-project-foodBlog`: **http://localhost/webTec-project-foodBlog/**
+* If in `webTec-project-foodBlog-main`: **http://localhost/webTec-project-foodBlog-main/**
+* If in `foodBlog`: **http://localhost/foodBlog/**
 
-* Registration and login with secure password hashing and session management.
-* Role-based access control with dynamic navigation.
-* Profile management including profile picture uploads.
+> **Automatic Database Setup:** On the first visit, the app connects using default XAMPP credentials (`root`, empty password), creates the `food_blog` database, and imports `config/schema.sql` (tables + demo seed data) automatically.
 
-### Admin Features
+---
 
-* Full CRUD operations for restaurants and menu items.
-* Dashboard displaying summary statistics (restaurants, menu items, reviews, posts).
-* Content moderation: remove members, reviews, and blog posts/comments.
+## Database Configuration & Manual Import
 
-### Member Features
+| Setting | Value (file: `config/database.php`) |
+|---|---|
+| Database name | `food_blog` |
+| Host / port | `localhost` / `3306` |
+| User / password | `root` / *(empty string)* (XAMPP default) |
 
-* Browse and search restaurants and menu items using filters (location, area, cuisine, price).
-* Post, edit, and delete reviews for menu items and restaurants.
-* Comment on “Food Experience” posts.
+If your MySQL uses a custom port or root password, update `config/database.php` accordingly.
 
-### Food Experience
+### Optional: Manual Database Import
+If you prefer importing the schema manually:
+* **phpMyAdmin**: Go to `http://localhost/phpmyadmin/` → click **Import** → choose `config/schema.sql` → click **Go**.
+* **CLI**: Run `mysql -u root < config/schema.sql` from your terminal.
 
-* Members and admins can post descriptive reviews.
-* Commenting and moderation system for posts.
-* Visitors can view content in read-only mode.
+---
 
-## Technical Details
+## Demo Accounts
 
-* **Backend:** PHP (MVC architecture)
-* **Database:** MySQL (shared schema)
-* **Frontend:** HTML, CSS, JavaScript (AJAX support)
-* **Security:** SQL injection prevention, XSS protection, CSRF awareness
-* **Validation:** Client-side and server-side validation
-* **File Uploads:** Profile pictures and menu item images (MIME and size validation)
-* **Git Workflow:** Feature branches, meaningful commits, PR merge into protected main branch
+The database comes pre-seeded with two accounts:
 
-## Database Schema
+| Role | Email | Password |
+|---|---|---|
+| **Admin** | `admin@foodblog.com` | `Admin@1234` |
+| **Member** | `member@foodblog.com` | `Member@1234` |
 
-Key tables include:
+You can also create new accounts anytime at `/auth/register`.
 
-* `users` – User accounts
-* `restaurants` – Restaurant information
-* `menu_items` – Menu items for restaurants
-* `reviews` – Reviews on menu items
-* `food_experience_posts` – Descriptive blog posts
-* `food_experience_comments` – Comments on posts
+---
 
-## Installation
+## Available Routes
 
-1. Clone the repository and navigate to the project root.
-2. Import the database schema into MySQL.
-3. Update `config/database.php` with your DB credentials.
-4. Ensure `public/uploads/` has write permissions.
-5. Run the project on a local PHP server (e.g., XAMPP).
-6. Access the application at `http://localhost/FoodBlog`.
+| Route | Description |
+|---|---|
+| `/home` | Home page with live interactive search |
+| `/restaurants` | List all restaurants |
+| `/restaurants/{id}/show` | Restaurant details & menu item catalog |
+| `/restaurants/create`, `/edit`, `/delete` | Admin restaurant management |
+| `/menu-items/{id}/show` | Dish details & customer reviews |
+| `/menu-items/create`, `/edit`, `/delete` | Admin menu item management |
+| `/food-experience` | Food Experience blog feed |
+| `/food-experience/{id}/show` | Blog post details & discussion comments |
+| `/auth/login`, `/register`, `/profile`, `/logout` | Authentication & profile settings |
+| `/admin/dashboard`, `/members`, `/reviews` | Admin dashboard and moderation panels |
+| `/api/...` | AJAX API endpoints for live search, reviews, comments, and moderation |
 
-## Usage
+---
 
-* Admins can log in and manage content.
-* Members can register, log in, and interact with restaurants and posts.
-* Visitors can browse restaurants, menu items, and posts without logging in.
+## Project Structure
 
-## Security
+```
+├── .htaccess            # Clean URL rewrite rules & directory protection
+├── .gitignore           # Git ignore rules for OS, IDE, and uploads
+├── index.php            # Front controller and central router
+├── config/
+│   ├── app.php          # Dynamic BASE_URL detection, session & CSRF helpers
+│   ├── database.php     # MySQL connection & auto-schema migration helper
+│   └── schema.sql       # Database schema & demo seed data
+├── controllers/         # MVC controllers (Auth, Home, Restaurant, MenuItem, FoodExperience, Admin, Api)
+├── models/              # Data models with prepared statements
+├── views/               # PHP templates (layouts, auth, home, restaurants, menu_items, food_experience, admin)
+├── css/                 # Global styles
+├── js/                  # AJAX handlers and real-time form validators
+└── uploads/             # User uploads (menu items and profile avatars)
+    ├── .htaccess        # Script execution protection for uploads
+    ├── menu/            # Menu item images (.gitkeep preserved)
+    └── profiles/        # User profile pictures (.gitkeep preserved)
+```
 
-* Passwords are stored using `password_hash()`.
-* All database queries use prepared statements.
-* Sessions are validated for role-based access control.
-* Client-side and server-side validation prevents invalid input.
+---
 
-## Contribution
+## Troubleshooting
 
-* Follow Git Flow: feature branches per task, at least 3 commits per student.
-* Merge completed tasks via pull requests to the main branch.
+* **404 on every page except home:** Ensure Apache's `mod_rewrite` is enabled in `xampp/apache/conf/httpd.conf` (`LoadModule rewrite_module modules/mod_rewrite.so`) and `AllowOverride All` is set for `htdocs`.
+* **Database connection failed:** Ensure MySQL is started in the XAMPP Control Panel and port `3306` is not blocked.
+* **Uploads failing:** Ensure `uploads/menu` and `uploads/profiles` are writable by the web server. Uploaded images must be JPEG/PNG up to 2 MB.

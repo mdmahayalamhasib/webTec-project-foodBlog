@@ -1,10 +1,17 @@
 <?php
-// ── Start session (matches your format)
+// ── Session
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-define('BASE_URL', '/food_blog');
+// ── BASE_URL is detected automatically from where index.php lives, so the
+//    project works from any folder name inside htdocs (e.g. /foodBlog, /food_blog)
+//    or from the web root. Example: http://localhost/foodBlog  ->  '/foodBlog'
+if (!defined('BASE_URL')) {
+    $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/index.php'));
+    define('BASE_URL', rtrim($scriptDir === '/' || $scriptDir === '.' ? '' : $scriptDir, '/'));
+}
+
 define('UPLOAD_DIR', __DIR__ . '/../uploads/');
 define('MENU_UPLOAD_DIR', UPLOAD_DIR . 'menu/');
 define('PROFILE_UPLOAD_DIR', UPLOAD_DIR . 'profiles/');
@@ -19,6 +26,10 @@ function isLoggedIn(): bool {
     return isset($_SESSION['user_id']);
 }
 
+function currentUserId(): int {
+    return (int)($_SESSION['user_id'] ?? 0);
+}
+
 function isAdmin(): bool {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 }
@@ -29,12 +40,14 @@ function isMember(): bool {
 
 function requireLogin(): void {
     if (!isLoggedIn()) {
+        setFlash('error', 'Please log in to continue.');
         redirect('/auth/login');
     }
 }
 
 function requireAdmin(): void {
     if (!isAdmin()) {
+        setFlash('error', 'Admin access required.');
         redirect('/auth/login');
     }
 }
@@ -45,9 +58,9 @@ function requireMember(): void {
     }
 }
 
-// ── HTML escaping
-function h(string $str): string {
-    return htmlspecialchars($str, ENT_QUOTES, 'UTF-8');
+// ── HTML escaping (null-safe)
+function h(?string $str): string {
+    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
 }
 
 // ── CSRF protection
@@ -80,29 +93,41 @@ function getFlash(): ?array {
     return null;
 }
 
+// ── JSON helpers (used by the AJAX/API endpoints)
 function jsonResponse(array $data, int $statusCode = 200): void {
     http_response_code($statusCode);
-    header('Content-Type: application/json');
+    header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data);
     exit;
 }
 
-// ── File upload helper    
+function jsonError(string $message, int $statusCode = 400): void {
+    jsonResponse(['success' => false, 'message' => $message, 'error' => $message], $statusCode);
+}
+
+// ── File upload helper
+// The file extension is derived from the verified MIME type, NOT from the
+// uploaded file name, so a ".php" file disguised as an image can never be stored.
 function uploadFile(array $file, string $dest_dir, string $prefix = ''): string|false {
-    if ($file['error'] !== UPLOAD_ERR_OK) return false;
-    if (!is_dir($dest_dir)) mkdir($dest_dir, 0755, true);
-
-    $allowed_types = ['image/jpeg', 'image/png'];
-    $finfo = new finfo(FILEINFO_MIME_TYPE);
-    $mime = $finfo->file($file['tmp_name']);
-
-    if (!in_array($mime, $allowed_types)) return false;
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) return false;
+    if (!is_uploaded_file($file['tmp_name'])) return false;
     if ($file['size'] > MAX_FILE_SIZE) return false;
+    if (!is_dir($dest_dir) && !mkdir($dest_dir, 0755, true)) return false;
 
-    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-    $filename = $prefix . bin2hex(random_bytes(8)) . '.' . $ext;
+    $allowed = ['image/jpeg' => 'jpg', 'image/png' => 'png'];
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime  = $finfo->file($file['tmp_name']);
+    if (!isset($allowed[$mime])) return false;
 
-    if (!move_uploaded_file($file['tmp_name'], $dest_dir . $filename)) return false;
+    $filename = $prefix . bin2hex(random_bytes(8)) . '.' . $allowed[$mime];
+    if (!move_uploaded_file($file['tmp_name'], rtrim($dest_dir, '/\\') . '/' . $filename)) return false;
 
     return $filename;
+}
+
+// ── Delete an uploaded file safely (only inside the given upload folder)
+function deleteUploadedFile(?string $filename, string $dir): void {
+    if (!$filename) return;
+    $path = rtrim($dir, '/\\') . '/' . basename($filename);
+    if (is_file($path)) @unlink($path);
 }

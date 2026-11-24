@@ -1,5 +1,5 @@
 <?php
-$isEdit = isset($item) && !empty($item);
+$isEdit = !empty($item['id']);
 $title  = $isEdit ? 'Edit Menu Item' : 'Add Menu Item';
 
 include __DIR__ . '/../layouts/header.php';

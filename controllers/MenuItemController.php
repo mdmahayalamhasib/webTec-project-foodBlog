@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../models/MenuItemModel.php';
 require_once __DIR__ . '/../models/RestaurantModel.php';
+require_once __DIR__ . '/../models/ReviewModel.php';
 require_once __DIR__ . '/../config/app.php';
 
 class MenuItemController {
@@ -22,7 +23,8 @@ class MenuItemController {
             return;
         }
 
-        $restaurant = $this->restaurants->findById($item['restaurant_id']);
+        $restaurant = $this->restaurants->findById((int)$item['restaurant_id']);
+        $reviews    = (new ReviewModel())->getByMenuItem($id);
 
         include __DIR__ . '/../views/menu_items/show.php';
     }
@@ -62,6 +64,7 @@ class MenuItemController {
 
         if ($errors) {
             $item = $_POST;
+            if (!isset($restaurant['id'])) { $restaurant = $this->restaurants->findById($restaurantId); }
             include __DIR__ . '/../views/menu_items/form.php';
             return;
         }
@@ -105,7 +108,8 @@ class MenuItemController {
         }
 
         if ($errors) {
-            $restaurant = $this->restaurants->findById($item['restaurant_id']);
+            $restaurant = $this->restaurants->findById((int)$item['restaurant_id']);
+            $item = array_merge($item, $_POST);
             include __DIR__ . '/../views/menu_items/form.php';
             return;
         }

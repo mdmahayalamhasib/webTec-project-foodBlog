@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/app.php';
 
 class MenuItemModel {
     private mysqli $db;
@@ -103,6 +104,10 @@ class MenuItemModel {
 
     //Delete menu item
     public function delete(int $id): void {
+        $row = $this->findById($id);
+        if ($row && !empty($row['image_path'])) {
+            deleteUploadedFile($row['image_path'], MENU_UPLOAD_DIR);
+        }
         $stmt = mysqli_prepare($this->db, "DELETE FROM menu_items WHERE id = ?");
         mysqli_stmt_bind_param($stmt, "i", $id);
         mysqli_stmt_execute($stmt);
@@ -126,5 +131,20 @@ class MenuItemModel {
              ORDER BY mi.created_at DESC"
         );
         return mysqli_fetch_all($result, MYSQLI_ASSOC);
+    }
+
+    //Search menu items by name/description, optionally filtered by restaurant location/area
+    public function search(string $q, string $location = '', string $area = ''): array {
+        return dbAll(
+            "SELECT mi.*, r.name AS restaurant_name
+             FROM menu_items mi
+             JOIN restaurants r ON r.id = mi.restaurant_id
+             WHERE (mi.name LIKE ? OR mi.description LIKE ?)
+               AND (r.location LIKE ? OR ? = '')
+               AND (r.area LIKE ? OR ? = '')
+             ORDER BY mi.name LIMIT 20",
+            'ssssss',
+            ["%$q%", "%$q%", "%$location%", $location, "%$area%", $area]
+        );
     }
 }

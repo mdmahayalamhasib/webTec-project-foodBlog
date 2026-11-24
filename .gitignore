@@ -1,0 +1,13 @@
+# IDE & System Files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+
+# Uploaded Media (preserve directory structure via .gitkeep)
+uploads/menu/*
+!uploads/menu/.gitkeep
+uploads/profiles/*
+!uploads/profiles/.gitkeep

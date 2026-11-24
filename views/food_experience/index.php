@@ -21,10 +21,10 @@
       <?php if ($post['restaurant_name']): ?>
         <p>🍴 <?= h($post['restaurant_name']) ?></p>
       <?php endif; ?>
-      <p><?= h(substr($post['content'], 0, 200)) ?>...</p>
+      <p><?= h(mb_strimwidth($post['content'], 0, 200, '...')) ?></p>
       <div class="card-actions">
         <a href="<?= BASE_URL ?>/food-experience/<?= $post['id'] ?>/show" class="btn-outline">Read More</a>
-        <?php if (isLoggedIn() && ($post['user_id'] === $_SESSION['user_id'] || isAdmin())): ?>
+        <?php if (isLoggedIn() && ((int)$post['user_id'] === currentUserId() || isAdmin())): ?>
           <a href="<?= BASE_URL ?>/food-experience/<?= $post['id'] ?>/edit" class="btn-secondary">Edit</a>
           <form method="POST" action="<?= BASE_URL ?>/food-experience/<?= $post['id'] ?>/delete" style="display:inline" onsubmit="return confirm('Delete post?')">
             <?= csrfField() ?>

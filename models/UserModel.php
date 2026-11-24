@@ -2,63 +2,51 @@
 require_once __DIR__ . '/../config/database.php';
 
 class UserModel {
-    private PDO $db;
-    public function __construct() { $this->db = getDB(); }
-
     public function findByEmail(string $email): ?array {
-        $s = $this->db->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
-        $s->execute([$email]);
-        return $s->fetch() ?: null;
+        return dbOne("SELECT * FROM users WHERE email = ? LIMIT 1", 's', [$email]);
     }
 
     public function findById(int $id): ?array {
-        $s = $this->db->prepare("SELECT * FROM users WHERE id = ? LIMIT 1");
-        $s->execute([$id]);
-        return $s->fetch() ?: null;
+        return dbOne("SELECT * FROM users WHERE id = ? LIMIT 1", 'i', [$id]);
+    }
+
+    /** $hashedToken must already be the sha256 of the cookie token. */
+    public function findByRememberToken(string $hashedToken): ?array {
+        return dbOne("SELECT * FROM users WHERE remember_token = ? LIMIT 1", 's', [$hashedToken]);
     }
 
     public function create(string $name, string $email, string $password, string $role): int {
-        $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
-        $s = $this->db->prepare("INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,?)");
-        $s->execute([$name, $email, $hash, $role]);
-        return (int)$this->db->lastInsertId();
+        $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
+        return dbExec("INSERT INTO users (name,email,password_hash,role) VALUES (?,?,?,?)", 'ssss', [$name, $email, $hash, $role]);
     }
 
     public function updateProfile(int $id, string $name, string $email, ?string $pic): void {
         if ($pic) {
-            $s = $this->db->prepare("UPDATE users SET name=?,email=?,profile_picture=? WHERE id=?");
-            $s->execute([$name, $email, $pic, $id]);
+            dbExec("UPDATE users SET name=?, email=?, profile_picture=? WHERE id=?", 'sssi', [$name, $email, $pic, $id]);
         } else {
-            $s = $this->db->prepare("UPDATE users SET name=?,email=? WHERE id=?");
-            $s->execute([$name, $email, $id]);
+            dbExec("UPDATE users SET name=?, email=? WHERE id=?", 'ssi', [$name, $email, $id]);
         }
     }
 
     public function updatePassword(int $id, string $password): void {
-        $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
-        $s = $this->db->prepare("UPDATE users SET password_hash=? WHERE id=?");
-        $s->execute([$hash, $id]);
+        $hash = password_hash($password, PASSWORD_BCRYPT, ['cost' => 10]);
+        dbExec("UPDATE users SET password_hash=? WHERE id=?", 'si', [$hash, $id]);
     }
 
-    public function setRememberToken(int $id, string $token): void {
-        $hash = hash('sha256', $token);
-        $s = $this->db->prepare("UPDATE users SET remember_token=? WHERE id=?");
-        $s->execute([$hash, $id]);
+    /** Stores the already-hashed token as given (pass null to clear). */
+    public function setRememberToken(int $id, ?string $hashedToken): void {
+        dbExec("UPDATE users SET remember_token=? WHERE id=?", 'si', [$hashedToken, $id]);
     }
 
     public function clearRememberToken(int $id): void {
-        $s = $this->db->prepare("UPDATE users SET remember_token=NULL WHERE id=?");
-        $s->execute([$id]);
+        $this->setRememberToken($id, null);
     }
 
     public function getAllMembers(): array {
-        $s = $this->db->prepare("SELECT id,name,email,profile_picture,created_at FROM users WHERE role='member' ORDER BY created_at DESC");
-        $s->execute();
-        return $s->fetchAll();
+        return dbAll("SELECT id,name,email,profile_picture,created_at FROM users WHERE role='member' ORDER BY created_at DESC");
     }
 
     public function delete(int $id): void {
-        $s = $this->db->prepare("DELETE FROM users WHERE id=?");
-        $s->execute([$id]);
+        dbExec("DELETE FROM users WHERE id=?", 'i', [$id]);
     }
 }

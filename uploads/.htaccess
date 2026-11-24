@@ -1,0 +1,14 @@
+# Uploaded files must never be executed as scripts
+Options -ExecCGI -Indexes
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+<FilesMatch "\.(php|phtml|php[0-9]|phps|phar)$">
+    Require all denied
+</FilesMatch>

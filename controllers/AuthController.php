@@ -50,15 +50,21 @@ class AuthController {
                 include __DIR__ . '/../views/auth/login.php';
                 return;
             }
-            $_SESSION['user_id'] = $user['id'];
+            session_regenerate_id(true);
+            $_SESSION['user_id'] = (int)$user['id'];
             $_SESSION['name']    = $user['name'];
             $_SESSION['role']    = $user['role'];
 
-            // Remember Me
+            // Remember Me: cookie holds the raw token, DB holds only its sha256 hash
             if (!empty($_POST['remember_me'])) {
                 $token = bin2hex(random_bytes(32));
-                $this->users->setRememberToken($user['id'], hash('sha256', $token));
-                setcookie('remember_token', $token, time() + 30 * 86400, '/', '', false, true);
+                $this->users->setRememberToken((int)$user['id'], hash('sha256', $token));
+                setcookie('remember_token', $token, [
+                    'expires'  => time() + 30 * 86400,
+                    'path'     => '/',
+                    'httponly' => true,
+                    'samesite' => 'Lax',
+                ]);
             }
 
             setFlash('success', 'Welcome back, ' . $user['name'] . '!');
@@ -70,8 +76,9 @@ class AuthController {
 
     public function logout(): void {
         if (isLoggedIn()) {
-            $this->users->clearRememberToken($_SESSION['user_id']);
+            $this->users->clearRememberToken(currentUserId());
         }
+        $_SESSION = [];
         session_destroy();
         setcookie('remember_token', '', time() - 3600, '/');
         header('Location: ' . BASE_URL . '/auth/login');
@@ -80,7 +87,8 @@ class AuthController {
 
     public function profile(): void {
         requireLogin();
-        $user = $this->users->findById($_SESSION['user_id']);
+        $user = $this->users->findById(currentUserId());
+        if (!$user) { $this->logout(); }
         $errors = [];
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (!verifyCsrfToken($_POST['csrf_token'] ?? '')) {
@@ -92,7 +100,7 @@ class AuthController {
             if (strlen($name) < 2) $errors[] = 'Name too short.';
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) $errors[] = 'Invalid email.';
             $existing = $this->users->findByEmail($email);
-            if ($existing && $existing['id'] !== $user['id']) $errors[] = 'Email already in use.';
+            if ($existing && (int)$existing['id'] !== (int)$user['id']) $errors[] = 'Email already in use.';
 
             $pic = null;
             if (!empty($_FILES['profile_picture']['name'])) {
@@ -101,25 +109,30 @@ class AuthController {
             }
 
             // Password change
-            if (!empty($_POST['current_password'])) {
+            $changePw = ($_POST['current_password'] ?? '') !== '' || ($_POST['new_password'] ?? '') !== '' || ($_POST['new_password_confirm'] ?? '') !== '';
+            if ($changePw) {
                 if (!password_verify($_POST['current_password'], $user['password_hash'])) {
                     $errors[] = 'Current password is incorrect.';
                 } elseif (strlen($_POST['new_password'] ?? '') < 8) {
                     $errors[] = 'New password must be at least 8 characters.';
-                } elseif ($_POST['new_password'] !== $_POST['new_password_confirm']) {
+                } elseif (($_POST['new_password'] ?? '') !== ($_POST['new_password_confirm'] ?? '')) {
                     $errors[] = 'New passwords do not match.';
                 }
             }
 
             if (!$errors) {
-                $this->users->updateProfile($user['id'], $name, $email, $pic);
-                if (!empty($_POST['current_password']) && empty($errors)) {
-                    $this->users->updatePassword($user['id'], $_POST['new_password']);
+                if ($pic && !empty($user['profile_picture'])) {
+                    deleteUploadedFile($user['profile_picture'], PROFILE_UPLOAD_DIR);
+                }
+                $this->users->updateProfile((int)$user['id'], $name, $email, $pic ?: null);
+                if ($changePw) {
+                    $this->users->updatePassword((int)$user['id'], $_POST['new_password']);
                 }
                 $_SESSION['name'] = $name;
                 setFlash('success', 'Profile updated successfully!');
                 redirect('/auth/profile');
             }
+            if ($pic) { deleteUploadedFile($pic, PROFILE_UPLOAD_DIR); }
             $user = array_merge($user, ['name' => $name, 'email' => $email]);
         }
         include __DIR__ . '/../views/auth/profile.php';

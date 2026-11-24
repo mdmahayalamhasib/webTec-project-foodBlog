@@ -12,7 +12,7 @@
         <td><?= h($m['email']) ?></td>
         <td><?= h(date('M d, Y', strtotime($m['created_at']))) ?></td>
         <td>
-          <button class="btn-danger btn-sm" onclick="deleteMember(<?= $m['id'] ?>, '<?= h(addslashes($m['name'])) ?>')">Remove</button>
+          <button class="btn-danger btn-sm" data-name="<?= h($m['name']) ?>" onclick="deleteMember(<?= (int)$m['id'] ?>, this.dataset.name)">Remove</button>
         </td>
       </tr>
     <?php endforeach; ?>
@@ -20,19 +20,4 @@
   </tbody>
 </table>
 
-<script>
-const BASE_URL = '<?= BASE_URL ?>';
-async function deleteMember(id, name) {
-  if (!confirm('Remove member "' + name + '"? This will delete all their reviews and posts.')) return;
-  const errBox = document.getElementById('member-error');
-  try {
-    const res  = await fetch(BASE_URL + '/api/admin/delete-member/' + id, {method: 'DELETE'});
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error');
-    document.getElementById('member-row-' + id)?.remove();
-  } catch (e) {
-    errBox.textContent = e.message; errBox.classList.remove('hidden');
-  }
-}
-</script>
 <?php include __DIR__ . '/../layouts/footer.php'; ?>

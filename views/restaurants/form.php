@@ -1,5 +1,5 @@
 <?php
-$isEdit = isset($restaurant) && !empty($restaurant);
+$isEdit = !empty($restaurant['id']);
 
 $title = $isEdit
     ? 'Edit Restaurant'

@@ -1,4 +1,4 @@
-// public/js/validate-register.js
+// js/validate-register.js
 
 (function () {
     const form = document.getElementById('registerForm');
@@ -45,10 +45,10 @@
             : clearError('password');
     });
 
-    form.confirm.addEventListener('input', () => {
-        form.confirm.value !== form.password.value
-            ? showError('confirm', 'Passwords do not match.')
-            : clearError('confirm');
+    form.password_confirm.addEventListener('input', () => {
+        form.password_confirm.value !== form.password.value
+            ? showError('password_confirm', 'Passwords do not match.')
+            : clearError('password_confirm');
     });
 
     // On submit
@@ -67,8 +67,8 @@
             showError('password', 'Password must be at least 8 characters.');
             valid = false;
         }
-        if (form.confirm.value !== form.password.value) {
-            showError('confirm', 'Passwords do not match.');
+        if (form.password_confirm.value !== form.password.value) {
+            showError('password_confirm', 'Passwords do not match.');
             valid = false;
         }
 
